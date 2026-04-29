@@ -466,7 +466,8 @@ def write_json(path: Path, payload: Any) -> None:
 def write_srt(path: Path, cues: List[Dict[str, Any]], converter: Any = None) -> None:
     lines = []
     last_end = 0.0
-    for i, cue in enumerate(cues, 1):
+    cue_index = 1
+    for cue in cues:
         start = max(0.0, float(cue["start"]))
         end = max(start + 0.2, float(cue["end"]))
         # Avoid visually bad overlap.
@@ -477,7 +478,8 @@ def write_srt(path: Path, cues: List[Dict[str, Any]], converter: Any = None) -> 
         text = _cv(clean_text(cue["text"]), converter)
         if not text:
             continue
-        lines.append(f"{i}\n{_format_srt_time(start)} --> {_format_srt_time(end)}\n{text}\n")
+        lines.append(f"{cue_index}\n{_format_srt_time(start)} --> {_format_srt_time(end)}\n{text}\n")
+        cue_index += 1
     path.write_text("\n".join(lines), encoding="utf-8")
 
 
