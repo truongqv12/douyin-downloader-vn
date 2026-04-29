@@ -73,6 +73,39 @@ def test_subtitle_pipeline_endpoint_no_burn(tmp_path):
         assert "ass" in payload["outputs"]
 
 
+def test_subtitle_routes_accept_non_dict_server_config(tmp_path):
+    config = ConfigLoader(None)
+    config.update(path=str(tmp_path), server=True)
+
+    app = build_app(config)
+
+    assert app.state.subtitle_job_manager is not None
+
+
+def test_subtitle_burn_reports_domain_error_for_invalid_mask_rect(tmp_path):
+    config = ConfigLoader(None)
+    config.update(path=str(tmp_path))
+    app = build_app(config)
+
+    with TestClient(app) as client:
+        resp = client.post(
+            "/api/v1/subtitles/burn",
+            json={
+                "video_path": str(tmp_path / "input.mp4"),
+                "ass_path": str(tmp_path / "input.ass"),
+                "output_video_path": str(tmp_path / "out.mp4"),
+                "mask": {"mode": "box", "rect": {"x": 0, "y": 0, "w": 10}},
+            },
+        )
+        assert resp.status_code == 200
+        job_id = resp.json()["job_id"]
+        payload = _wait_for_subtitle_job(client, job_id)
+
+    assert payload["status"] == "failed"
+    assert "SubtitleParseError" in payload["error"]
+    assert "HTTPException" not in payload["error"]
+
+
 def _wait_for_subtitle_job(client: TestClient, job_id: str):
     deadline = time.time() + 2.0
     while time.time() < deadline:

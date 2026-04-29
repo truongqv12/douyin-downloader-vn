@@ -3,12 +3,13 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from pydantic import BaseModel, Field
 
 from server.subtitle_jobs import SubtitleJob, SubtitleJobManager
 from subtitle.ass_converter import convert_srt_to_ass
 from subtitle.burner import burn_ass
+from subtitle.errors import SubtitleParseError
 from subtitle.mask import build_masked_subtitle_filter
 from subtitle.models import MaskRect
 from subtitle.pipeline import SubtitlePipeline
@@ -85,6 +86,8 @@ def register_subtitle_routes(app: FastAPI, config: Any) -> SubtitleJobManager:
         raise RuntimeError(f"unsupported subtitle job type: {job.type}")
 
     server_cfg = config.get("server") or {}
+    if not isinstance(server_cfg, dict):
+        server_cfg = {}
     manager = SubtitleJobManager(
         executor=executor,
         max_concurrency=int(config.get("thread", 2) or 2),
@@ -222,4 +225,4 @@ def _rect_from_payload(raw: Optional[Dict[str, int]]) -> Optional[MaskRect]:
             h=int(raw["h"]),
         )
     except KeyError as exc:
-        raise HTTPException(status_code=400, detail=f"missing mask rect field: {exc}")
+        raise SubtitleParseError(f"missing mask rect field: {exc}")
