@@ -593,7 +593,7 @@ def transcribe_file(
             write_txt(txt_path, full_text)
             saved.append(txt_path.name)
         if "srt" in output_formats:
-            write_srt(srt_path, cues, converter=None)
+            write_srt(srt_path, cues, converter=converter)
             saved.append(srt_path.name)
         if args.json:
             payload = {
