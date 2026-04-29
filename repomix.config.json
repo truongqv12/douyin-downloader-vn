@@ -1,0 +1,28 @@
+{
+  "output": {
+    "removeEmptyLines": true,
+    "removeComments": true
+  },
+  "ignore": {
+    "customPatterns": [
+      "plans/**",
+      "tests/**",
+      "docs/**",
+      "assets/**",
+      "dist/**",
+      "build/**",
+      "video_output/**",
+      "image_output/**",
+      ".agent/**",
+      ".claude/**",
+      ".venv/**",
+      "vendor/**",
+      "__pycache__/**",
+      "node_modules/**",
+      "*.md",
+      "*.svg",
+      "*.css",
+      "*.xml"
+    ]
+  }
+}
