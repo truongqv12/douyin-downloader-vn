@@ -22,6 +22,7 @@ douyin-dl translate-srt \
 ```
 
 `noop` dùng để test pipeline, không dịch nội dung. Backend local có thể dùng `argos` hoặc `ollama` nếu đã cài/cấu hình.
+Mặc định CLI giữ xuống dòng trong từng cue; nếu muốn gộp dòng trước khi dịch, thêm `--no-preserve-line-breaks`.
 
 ## 2. Convert SRT sang ASS
 

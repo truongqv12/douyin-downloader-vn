@@ -56,7 +56,7 @@ dev = [
     "httpx>=0.25",
 ]
 all = [
-    "douyin-downloader[browser,transcribe,server,dev]",
+    "douyin-downloader[browser,transcribe,server,subtitle,translate-local,dev]",
 ]
 
 [project.scripts]

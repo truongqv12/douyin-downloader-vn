@@ -1,5 +1,6 @@
 import pytest
 
+from cli.subtitle_commands import _run_translate_srt
 from subtitle.errors import TranslationError
 from subtitle.srt_parser import parse_srt_text
 from subtitle.translator import translate_cues
@@ -57,3 +58,34 @@ def test_translate_cues_rejects_missing_id():
 
     with pytest.raises(TranslationError):
         translate_cues(cues, _MissingTranslator(), source_lang="zh", target_lang="vi")
+
+
+def test_translate_srt_cli_preserves_line_breaks_by_default(tmp_path):
+    input_path = tmp_path / "input.srt"
+    output_path = tmp_path / "output.srt"
+    input_path.write_text(
+        "1\n00:00:01,000 --> 00:00:02,000\nA\nB\n",
+        encoding="utf-8",
+    )
+
+    class _Display:
+        def print_success(self, _message):
+            return None
+
+    args = type(
+        "Args",
+        (),
+        {
+            "input": str(input_path),
+            "output": str(output_path),
+            "translator": "noop",
+            "source_lang": "zh",
+            "target_lang": "vi",
+            "batch_size": 20,
+            "no_preserve_line_breaks": False,
+        },
+    )()
+
+    _run_translate_srt(args, _Display())
+
+    assert "A\nB" in output_path.read_text(encoding="utf-8")

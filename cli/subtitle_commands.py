@@ -34,9 +34,9 @@ def add_subtitle_subcommands(parser: argparse.ArgumentParser) -> None:
     )
     translate.add_argument("--batch-size", type=int, default=20, help="Số cue mỗi batch")
     translate.add_argument(
-        "--preserve-line-breaks",
+        "--no-preserve-line-breaks",
         action="store_true",
-        help="Giữ xuống dòng trong từng cue khi gửi đi dịch",
+        help="Gộp xuống dòng trong từng cue thành 1 dòng trước khi dịch",
     )
 
     convert = subparsers.add_parser(
@@ -136,7 +136,7 @@ def _run_translate_srt(args: Any, display: Any) -> None:
         source_lang=args.source_lang,
         target_lang=args.target_lang,
         batch_size=args.batch_size,
-        preserve_line_breaks=bool(args.preserve_line_breaks),
+        preserve_line_breaks=not bool(args.no_preserve_line_breaks),
     )
     validate_same_timing(cues, translated)
     write_srt(output_path, translated)
