@@ -72,7 +72,7 @@ class PipelineSubtitleRequest(BaseModel):
 
 
 def register_subtitle_routes(app: FastAPI, config: Any) -> SubtitleJobManager:
-    async def executor(job: SubtitleJob) -> Dict[str, Any]:
+    def executor(job: SubtitleJob) -> Dict[str, Any]:
         payload = job.payload
         if job.type == "subtitle_translate":
             return _execute_translate(payload, job)

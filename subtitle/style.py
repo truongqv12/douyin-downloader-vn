@@ -52,30 +52,30 @@ class AssStyle:
         if "preset" in data:
             data.pop("preset")
         return cls(
-            name=str(data.get("name") or "Default"),
-            font=str(data.get("font") or "Noto Sans"),
-            font_size=int(data.get("font_size") or data.get("font-size") or 42),
-            primary_color=str(data.get("primary_color") or "&H00FFFFFF"),
-            secondary_color=str(data.get("secondary_color") or "&H000000FF"),
-            outline_color=str(data.get("outline_color") or "&H00000000"),
-            back_color=str(data.get("back_color") or "&H99000000"),
+            name=str(_get_value(data, "name", "Default")),
+            font=str(_get_value(data, "font", "Noto Sans")),
+            font_size=_get_int_any(data, ("font_size", "font-size"), 42),
+            primary_color=str(_get_value(data, "primary_color", "&H00FFFFFF")),
+            secondary_color=str(_get_value(data, "secondary_color", "&H000000FF")),
+            outline_color=str(_get_value(data, "outline_color", "&H00000000")),
+            back_color=str(_get_value(data, "back_color", "&H99000000")),
             bold=bool(data.get("bold", False)),
             italic=bool(data.get("italic", False)),
             underline=bool(data.get("underline", False)),
             strikeout=bool(data.get("strikeout", False)),
-            scale_x=int(data.get("scale_x") or 100),
-            scale_y=int(data.get("scale_y") or 100),
-            spacing=int(data.get("spacing") or 0),
-            angle=int(data.get("angle") or 0),
-            border_style=int(data.get("border_style") or 1),
-            outline=int(data.get("outline") or 2),
-            shadow=int(data.get("shadow") or 1),
-            alignment=int(data.get("alignment") or 2),
-            margin_l=int(data.get("margin_l") or 40),
-            margin_r=int(data.get("margin_r") or 40),
-            margin_v=int(data.get("margin_v") or 70),
-            encoding=int(data.get("encoding") or 1),
-            wrap_style=int(data.get("wrap_style") or 0),
+            scale_x=_get_int(data, "scale_x", 100),
+            scale_y=_get_int(data, "scale_y", 100),
+            spacing=_get_int(data, "spacing", 0),
+            angle=_get_int(data, "angle", 0),
+            border_style=_get_int(data, "border_style", 1),
+            outline=_get_int(data, "outline", 2),
+            shadow=_get_int(data, "shadow", 1),
+            alignment=_get_int(data, "alignment", 2),
+            margin_l=_get_int(data, "margin_l", 40),
+            margin_r=_get_int(data, "margin_r", 40),
+            margin_v=_get_int(data, "margin_v", 70),
+            encoding=_get_int(data, "encoding", 1),
+            wrap_style=_get_int(data, "wrap_style", 0),
         )
 
     def to_ass_style_line(self) -> str:
@@ -110,3 +110,18 @@ class AssStyle:
 
 def _ass_bool(value: bool) -> str:
     return "-1" if value else "0"
+
+
+def _get_value(data: Dict[str, Any], key: str, default: Any) -> Any:
+    return data[key] if key in data and data[key] is not None else default
+
+
+def _get_int(data: Dict[str, Any], key: str, default: int) -> int:
+    return int(_get_value(data, key, default))
+
+
+def _get_int_any(data: Dict[str, Any], keys: tuple[str, ...], default: int) -> int:
+    for key in keys:
+        if key in data and data[key] is not None:
+            return int(data[key])
+    return default

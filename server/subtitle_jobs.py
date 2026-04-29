@@ -4,7 +4,7 @@ import asyncio
 import time
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Awaitable, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 
 def _now_iso() -> str:
@@ -52,7 +52,7 @@ class SubtitleJobManager:
 
     def __init__(
         self,
-        executor: Callable[[SubtitleJob], Awaitable[Dict[str, Any]]],
+        executor: Callable[[SubtitleJob], Dict[str, Any]],
         *,
         max_concurrency: int = 2,
         max_jobs: int = DEFAULT_MAX_JOBS,
@@ -78,7 +78,8 @@ class SubtitleJobManager:
             job.status = "running"
             job.started_at = _now_iso()
             try:
-                result = await self.executor(job)
+                loop = asyncio.get_running_loop()
+                result = await loop.run_in_executor(None, self.executor, job)
                 job.outputs = {
                     str(k): str(v) for k, v in (result.get("outputs") or {}).items()
                 }

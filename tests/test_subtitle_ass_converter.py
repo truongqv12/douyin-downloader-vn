@@ -45,3 +45,25 @@ def test_style_from_config_applies_preset_and_overrides():
     assert style.font == "Arial"
     assert style.font_size == 44
     assert style.margin_v == 80
+
+
+def test_style_from_config_preserves_explicit_zero_values():
+    config = {
+        "style": {
+            "presets": {
+                "douyin_vi": {
+                    "shadow": 0,
+                    "outline": 0,
+                    "margin_v": 0,
+                    "spacing": 0,
+                }
+            }
+        }
+    }
+
+    style = AssStyle.from_config(config, preset_name="douyin_vi")
+
+    assert style.shadow == 0
+    assert style.outline == 0
+    assert style.margin_v == 0
+    assert style.spacing == 0
