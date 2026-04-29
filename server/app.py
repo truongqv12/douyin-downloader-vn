@@ -20,6 +20,11 @@ from config import ConfigLoader
 from control import QueueManager, RateLimiter, RetryHandler
 from core import DouyinAPIClient, URLParser, DownloaderFactory
 from server.jobs import JobManager
+from server.subtitle_api import (
+    get_subtitle_job_or_404,
+    register_subtitle_routes,
+    shutdown_subtitle_jobs,
+)
 from storage import FileManager
 from utils.logger import setup_logger
 from utils.validators import is_short_url, normalize_short_url
@@ -125,6 +130,7 @@ def build_app(config: ConfigLoader) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         yield
+        await shutdown_subtitle_jobs(app)
         await manager.shutdown()
 
     app = FastAPI(
@@ -135,6 +141,7 @@ def build_app(config: ConfigLoader) -> FastAPI:
     )
     app.state.job_manager = manager
     app.state.deps = deps
+    register_subtitle_routes(app, config)
 
     @app.get("/api/v1/health")
     async def health() -> Dict[str, str]:
@@ -151,6 +158,9 @@ def build_app(config: ConfigLoader) -> FastAPI:
     async def get_job(job_id: str) -> Dict[str, Any]:
         job = await manager.get(job_id)
         if job is None:
+            subtitle_job = await get_subtitle_job_or_404(app, job_id)
+            if subtitle_job is not None:
+                return subtitle_job
             raise HTTPException(status_code=404, detail="job not found")
         return job.to_dict()
 

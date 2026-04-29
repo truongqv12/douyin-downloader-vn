@@ -52,6 +52,54 @@ transcript:
   api_key_env: OPENAI_API_KEY
   api_key: ""
 
+# Subtitle pipeline（可选）：dịch SRT → ASS → che subtitle cũ → burn vào video
+subtitle:
+  enabled: false
+  output_dir: ""
+  ffmpeg_path: ffmpeg
+  ffprobe_path: ""
+  fonts_dir: ./fonts
+  translate:
+    enabled: true
+    source_lang: zh
+    target_lang: vi
+    backend: noop       # noop|argos|ollama
+    batch_size: 20
+    timeout_seconds: 120
+    preserve_line_breaks: true
+    ollama_url: http://localhost:11434
+    ollama_model: qwen2.5:7b
+    api_key_env: OPENAI_API_KEY
+  style:
+    preset: douyin_vi
+    presets:
+      douyin_vi:
+        font: Noto Sans
+        font_size: 42
+        primary_color: "&H00FFFFFF"
+        secondary_color: "&H000000FF"
+        outline_color: "&H00000000"
+        back_color: "&H99000000"
+        outline: 2
+        shadow: 1
+        border_style: 1
+        alignment: 2
+        margin_l: 40
+        margin_r: 40
+        margin_v: 70
+        wrap_style: 0
+  mask:
+    mode: none          # none|box|blur|crop
+    rect: ""            # "x,y,w,h"
+    box_color: black@0.85
+    blur_strength: 12
+  burn:
+    enabled: false
+    video_codec: libx264
+    audio_codec: copy
+    crf: 18
+    preset: medium
+
 browser_fallback:
   enabled: true
   headless: false
