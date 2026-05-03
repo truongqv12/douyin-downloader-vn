@@ -42,7 +42,10 @@ def build_box_filter(rect: MaskRect, *, box_color: str = "black@0.85") -> str:
 
 def build_crop_filter(rect: MaskRect) -> str:
     rect.validate_basic()
-    return f"crop=iw:ih-{rect.h}:0:0"
+    if rect.y <= 0:
+        raise SubtitleParseError("crop mask requires rect.y > 0")
+    # Crop mode removes everything from subtitle-area top downward, unlike box/blur.
+    return f"crop=iw:{rect.y}:0:0"
 
 
 def build_blur_filter(rect: MaskRect, *, blur_strength: int = 12) -> str:

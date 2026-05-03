@@ -25,12 +25,17 @@ def test_box_crop_blur_filter_strings():
     assert build_box_filter(rect) == (
         "drawbox=x=0:y=880:w=1080:h=180:color=black@0.85:t=fill"
     )
-    assert build_crop_filter(rect) == "crop=iw:ih-180:0:0"
+    assert build_crop_filter(rect) == "crop=iw:880:0:0"
     assert build_blur_filter(rect) == (
         "split[base][crop];"
         "[crop]crop=1080:180:0:880,boxblur=12:1[blur];"
         "[base][blur]overlay=0:880"
     )
+
+
+def test_crop_filter_requires_subtitle_top_below_first_row():
+    with pytest.raises(SubtitleParseError):
+        build_crop_filter(MaskRect(0, 0, 1080, 180))
 
 
 def test_masked_subtitle_filter_requires_rect():

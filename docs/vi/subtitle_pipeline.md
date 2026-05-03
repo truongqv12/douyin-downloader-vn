@@ -85,7 +85,7 @@ Các mode:
 
 - `box`: che chắc chắn nhất nhưng nhìn thô.
 - `blur`: tự nhiên hơn nhưng có thể còn thấy chữ cũ.
-- `crop`: cắt bỏ vùng subtitle cũ, chỉ hợp khi vùng đó không quan trọng.
+- `crop`: cắt từ mép trên của vùng subtitle (`rect.y`) xuống hết phần dưới video; chỉ hợp khi toàn bộ phần dưới không quan trọng.
 - `none`: không che.
 
 ## 6. Pipeline end-to-end
