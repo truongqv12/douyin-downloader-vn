@@ -47,9 +47,11 @@ class SubtitlePipeline:
         final_video = output_video_path or output_dir / f"{video_path.stem}.{target_lang}.mp4"
 
         try:
+            result.stage = "parse"
             self._progress("parse", 1, 5, "Parsing SRT")
             cues = parse_srt(input_srt_path)
 
+            result.stage = "translate"
             self._progress("translate", 2, 5, "Translating subtitle text")
             translator = create_translator(translator_name)
             translated = translate_cues(
@@ -63,6 +65,7 @@ class SubtitlePipeline:
             write_srt(translated_srt, translated)
             result.outputs["translated_srt"] = str(translated_srt)
 
+            result.stage = "convert_ass"
             self._progress("convert_ass", 3, 5, "Converting SRT to ASS")
             style_obj = style or AssStyle.from_config(
                 subtitle_config or {},
@@ -72,6 +75,7 @@ class SubtitlePipeline:
             result.outputs["ass"] = str(ass_path)
 
             if burn:
+                result.stage = "burn"
                 self._progress("burn", 4, 5, "Burning ASS into video")
                 video_filter = build_masked_subtitle_filter(
                     ass_path=ass_path,

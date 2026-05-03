@@ -73,6 +73,36 @@ def test_subtitle_pipeline_endpoint_no_burn(tmp_path):
         assert "ass" in payload["outputs"]
 
 
+def test_subtitle_pipeline_endpoint_reports_failure_stage(tmp_path):
+    config = ConfigLoader(None)
+    config.update(path=str(tmp_path))
+    app = build_app(config)
+
+    input_srt = tmp_path / "input.srt"
+    video = tmp_path / "input.mp4"
+    input_srt.write_text("1\n00:00:01,000 --> 00:00:02,000\n你好\n", encoding="utf-8")
+    video.write_bytes(b"not-a-real-video")
+
+    with TestClient(app) as client:
+        resp = client.post(
+            "/api/v1/subtitles/pipeline",
+            json={
+                "video_path": str(video),
+                "input_srt_path": str(input_srt),
+                "output_dir": str(tmp_path / "out"),
+                "translator": "noop",
+                "burn": True,
+                "mask": {"mode": "box"},
+            },
+        )
+        assert resp.status_code == 200
+        payload = _wait_for_subtitle_job(client, resp.json()["job_id"])
+
+    assert payload["status"] == "failed"
+    assert payload["stage"] == "burn"
+    assert "mask rect is required" in payload["error"]
+
+
 def test_subtitle_routes_accept_non_dict_server_config(tmp_path):
     config = ConfigLoader(None)
     config.update(path=str(tmp_path), server=True)
