@@ -12,6 +12,7 @@ from storage import Database, FileManager
 from control import QueueManager, RateLimiter, RetryHandler
 from core import DouyinAPIClient, URLParser, DownloaderFactory
 from cli.progress_display import ProgressDisplay
+from cli.subtitle_commands import add_subtitle_subcommands, run_subtitle_subcommand
 from utils.logger import setup_logger, set_console_log_level
 from utils.notifier import build_notifier
 from utils.validators import is_short_url, normalize_short_url
@@ -139,7 +140,12 @@ async def main_async(args):
     # 若 config 不存在且使用了 --hot-board / --search / --serve 等独立子命令，
     # 允许以默认配置运行（只要命令行提供了 --path）。
     if not Path(config_path).exists():
-        if not (args.hot_board is not None or args.search or args.serve):
+        if not (
+            args.hot_board is not None
+            or args.search
+            or args.serve
+            or getattr(args, "subtitle_command", None)
+        ):
             display.print_error(f"Config file not found: {config_path}")
             return
         config = ConfigLoader(None)
@@ -148,6 +154,9 @@ async def main_async(args):
 
     if args.path:
         config.update(path=args.path)
+
+    if await run_subtitle_subcommand(args, config, display):
+        return
 
     # 独立子命令：热榜 / 搜索 / 服务
     if args.hot_board is not None or args.search:
@@ -362,6 +371,7 @@ def main():
     parser.add_argument(
         '--serve-port', type=int, default=8000, help='REST 服务监听端口'
     )
+    add_subtitle_subcommands(parser)
     try:
         from __init__ import __version__
     except ImportError:

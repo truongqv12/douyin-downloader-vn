@@ -43,6 +43,12 @@ server = [
     "uvicorn>=0.23",
     "pydantic>=2.0",
 ]
+subtitle = [
+    "opencv-python>=4.8.0",
+]
+translate-local = [
+    "argos-translate>=1.9.0",
+]
 dev = [
     "pytest>=7.0",
     "pytest-asyncio>=0.21",
@@ -50,14 +56,14 @@ dev = [
     "httpx>=0.25",
 ]
 all = [
-    "douyin-downloader[browser,transcribe,server,dev]",
+    "douyin-downloader[browser,transcribe,server,subtitle,translate-local,dev]",
 ]
 
 [project.scripts]
 douyin-dl = "cli.main:main"
 
 [tool.setuptools.packages.find]
-include = ["cli*", "core*", "auth*", "config*", "control*", "storage*", "utils*", "tools*", "server*"]
+include = ["cli*", "core*", "auth*", "config*", "control*", "storage*", "utils*", "tools*", "server*", "subtitle*"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
