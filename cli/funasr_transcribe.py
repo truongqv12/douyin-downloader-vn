@@ -699,10 +699,17 @@ def main():
 
     try:
         import funasr  # noqa: F401
-    except ImportError:
-        display.dep_fail("funasr", "pip install -U funasr modelscope")
+    except ImportError as e:
+        msg = str(e)
+        if "No module named 'funasr'" in msg:
+            display.dep_fail("funasr", "pip install -U funasr modelscope")
+        elif "No module named" in msg:
+            missing = msg.split("No module named")[-1].strip().strip("'\"")
+            display.dep_fail("funasr", f"funasr 已装但缺少依赖 {missing}  →  pip install {missing}")
+        else:
+            display.dep_fail("funasr", f"import 失败: {msg}")
         sys.exit(1)
-    display.dep_ok("funasr", "已安装")
+    display.dep_ok("funasr", f"v{getattr(funasr, '__version__', '?')}")
 
     converter = load_converter(args.sc)
     if converter:
