@@ -38,6 +38,17 @@ browser = [
 transcribe = [
     "openai-whisper>=20231117",
 ]
+transcribe-funasr = [
+    "funasr>=1.2.0",
+    "modelscope>=1.15.0",
+]
+transcribe-sensevoice = [
+    "numpy>=1.24.0",
+    "sherpa-onnx>=1.10.0",
+]
+transcribe-opencc = [
+    "opencc-python-reimplemented>=0.1.7",
+]
 server = [
     "fastapi>=0.100",
     "uvicorn>=0.23",
@@ -56,7 +67,7 @@ dev = [
     "httpx>=0.25",
 ]
 all = [
-    "douyin-downloader[browser,transcribe,server,subtitle,translate-local,dev]",
+    "douyin-downloader[browser,transcribe,transcribe-funasr,transcribe-sensevoice,transcribe-opencc,server,subtitle,translate-local,dev]",
 ]
 
 [project.scripts]

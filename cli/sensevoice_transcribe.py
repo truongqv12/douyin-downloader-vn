@@ -45,8 +45,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-import numpy as np
 from rich.console import Console
+from rich.panel import Panel
 from rich.progress import (
     BarColumn,
     Progress,
@@ -56,7 +56,6 @@ from rich.progress import (
     TimeElapsedColumn,
 )
 from rich.table import Table
-from rich.panel import Panel
 from rich.text import Text
 
 console = Console()
@@ -431,7 +430,7 @@ def transcribe_with_sherpa(
     args: argparse.Namespace,
     ffmpeg_path: str,
 ) -> tuple[List[Segment], float, float]:
-    import sherpa_onnx
+    import numpy as np
 
     vad, window_size = create_vad(args)
 
@@ -598,6 +597,12 @@ def main():
         display.dep_fail("ffmpeg", "conda install -c conda-forge ffmpeg 或放 ffmpeg.exe 到同目录")
         sys.exit(1)
     display.dep_ok("ffmpeg", ffmpeg_path)
+
+    try:
+        import numpy  # noqa: F401
+    except ImportError:
+        display.dep_fail("numpy", "pip install -U sherpa-onnx numpy")
+        sys.exit(1)
 
     try:
         import sherpa_onnx  # noqa: F401

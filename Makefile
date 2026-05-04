@@ -24,10 +24,16 @@ MASK_JSON ?= mask_rect.json
 TIME ?= 00:00:03
 FFMPEG ?= ffmpeg
 FONTS_DIR ?=
+TRANSCRIBE_DIR ?= ./Downloaded
+FUNASR_ARGS ?= -d "$(TRANSCRIBE_DIR)" --srt
+SENSEVOICE_ARGS ?= -d "$(TRANSCRIBE_DIR)" --srt
+WHISPER_ARGS ?= -d "$(TRANSCRIBE_DIR)" --srt
 
 .PHONY: help install-dev install-all test lint lint-new check clean serve \
 	subtitle-tests subtitle-lint subtitle-check subtitle-translate subtitle-ass \
-	subtitle-pick subtitle-burn subtitle-pipeline
+	subtitle-pick subtitle-burn subtitle-pipeline \
+	install-transcribe-whisper install-transcribe-funasr install-transcribe-sensevoice install-transcribe-opencc install-transcribe-all \
+	funasr-transcribe sensevoice-transcribe whisper-transcribe
 
 help:
 	@echo "Common targets:"
@@ -38,6 +44,16 @@ help:
 	@echo "  make lint-new           Run ruff on subtitle/API additions"
 	@echo "  make check              Run lint-new + full tests"
 	@echo "  make serve              Run REST API server"
+	@echo ""
+	@echo "Transcribe targets:"
+	@echo "  make install-transcribe-whisper"
+	@echo "  make install-transcribe-funasr"
+	@echo "  make install-transcribe-sensevoice"
+	@echo "  make install-transcribe-opencc"
+	@echo "  make install-transcribe-all"
+	@echo "  make funasr-transcribe FUNASR_ARGS='-d ./Downloaded --srt'"
+	@echo "  make whisper-transcribe WHISPER_ARGS='-d ./Downloaded --srt'"
+	@echo "  make sensevoice-transcribe SENSEVOICE_ARGS='-d ./Downloaded --srt --sense-voice ./model.int8.onnx --tokens ./tokens.txt --silero-vad-model ./silero_vad.onnx'"
 	@echo ""
 	@echo "Subtitle targets:"
 	@echo "  make subtitle-tests"
@@ -54,6 +70,21 @@ install-dev:
 
 install-all:
 	$(PIP) install -e ".[all]"
+
+install-transcribe-whisper:
+	$(PIP) install -e ".[transcribe]"
+
+install-transcribe-funasr:
+	$(PIP) install -e ".[transcribe-funasr]"
+
+install-transcribe-sensevoice:
+	$(PIP) install -e ".[transcribe-sensevoice]"
+
+install-transcribe-opencc:
+	$(PIP) install -e ".[transcribe-opencc]"
+
+install-transcribe-all:
+	$(PIP) install -e ".[transcribe,transcribe-funasr,transcribe-sensevoice,transcribe-opencc]"
 
 test:
 	$(PYTHON) -m pytest tests
@@ -95,3 +126,12 @@ subtitle-burn:
 
 subtitle-pipeline:
 	$(DOUYIN) subtitle-pipeline --video "$(VIDEO)" --srt "$(SRT)" --output "$(OUTPUT)" --output-dir "$(OUTPUT_DIR)" --source-lang "$(SOURCE_LANG)" --target-lang "$(TARGET_LANG)" --translator "$(TRANSLATOR)" --batch-size "$(BATCH_SIZE)" --style-preset "$(STYLE)" --mask-mode "$(MASK_MODE)" --mask-rect "$(MASK_RECT)" --ffmpeg-path "$(FFMPEG)" --fonts-dir "$(FONTS_DIR)"
+
+funasr-transcribe:
+	$(PYTHON) cli/funasr_transcribe.py $(FUNASR_ARGS)
+
+sensevoice-transcribe:
+	$(PYTHON) cli/sensevoice_transcribe.py $(SENSEVOICE_ARGS)
+
+whisper-transcribe:
+	$(PYTHON) cli/whisper_transcribe.py $(WHISPER_ARGS)
