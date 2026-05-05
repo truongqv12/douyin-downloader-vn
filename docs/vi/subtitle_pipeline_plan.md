@@ -154,6 +154,35 @@ Một lệnh/API chạy trọn quy trình: video + SRT → translate → ASS →
 - [x] Test API không gọi thật FFmpeg/API ngoài.
 - [x] Cập nhật tài liệu tiếng Việt end-to-end.
 
+## Giai đoạn 6 — Batch subtitle CLI quét thư mục
+
+### Mục tiêu
+
+Thêm CLI batch để xử lý hàng loạt video đã có SRT theo pattern giống `funasr_transcribe.py`: quét thư mục, tự ghép video với file `.srt`, dịch subtitle, tạo ASS và tùy chọn burn video. Đây là bước nối giữa flow hiện tại và pipeline lớn trong tương lai: tải → transcribe → dịch sub → ghép sub → TTS/ghép audio.
+
+### Phạm vi
+
+- Thêm `subtitle/batch.py` chứa discovery, matching, skip-existing và summary.
+- Thêm CLI `subtitle-batch`.
+- Thêm Makefile target `subtitle-batch`.
+- Cập nhật tài liệu tiếng Việt cho workflow batch.
+- Thêm tests cho discovery/matching/skip-existing/batch run.
+
+### Checklist
+
+- [x] Tạo model batch item/result/summary.
+- [x] Quét recursive video trong thư mục.
+- [x] Hỗ trợ `--file` để chạy một video.
+- [x] Tự tìm SRT cùng stem theo suffix/pattern ưu tiên.
+- [x] Hỗ trợ `--skip-existing`.
+- [x] Gọi lại `SubtitlePipeline.run()` cho từng cặp video/SRT.
+- [x] Summary success/failed/skipped rõ ràng.
+- [x] CLI `subtitle-batch`.
+- [x] Makefile target `subtitle-batch`.
+- [x] Test batch discovery/matching/skip-existing.
+- [x] Test batch run không gọi FFmpeg thật khi `--no-burn`.
+- [x] Cập nhật docs tiếng Việt.
+
 ## Kiểm tra cuối
 
 - [x] `python -m pytest tests/`

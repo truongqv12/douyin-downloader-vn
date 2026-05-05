@@ -493,6 +493,60 @@ douyin-dl subtitle-pipeline \
   --no-burn
 ```
 
+### 6.7 Batch subtitle theo thư mục
+
+Quét thư mục giống nhóm CLI transcribe, tự ghép video với SRT cùng stem rồi chạy pipeline từng file:
+
+```bash
+douyin-dl subtitle-batch \
+  --dir ./Downloaded \
+  --output-dir ./subtitle_outputs \
+  --srt-suffixes .transcript.srt,.srt \
+  --translator argos \
+  --target-lang vi \
+  --style-preset douyin_vi \
+  --mask-mode blur \
+  --mask-rect 0,880,1080,180 \
+  --skip-existing
+```
+
+Khi cần chạy thử không burn:
+
+```bash
+douyin-dl subtitle-batch \
+  --dir ./Downloaded \
+  --output-dir ./subtitle_outputs \
+  --translator noop \
+  --no-burn
+```
+
+Mapping mặc định:
+
+```text
+abc.mp4 → abc.transcript.srt hoặc abc.srt
+output → subtitle_outputs/abc/abc.transcript.vi.srt, abc.transcript.vi.ass, abc.vi.mp4
+```
+
+Option chính:
+
+| Tham số | Mặc định | Ý nghĩa |
+| --- | --- | --- |
+| `--dir` | `./Downloaded` | thư mục quét video |
+| `--file` | rỗng | chỉ xử lý một video |
+| `--output-dir` | `./subtitle_outputs` | thư mục output |
+| `--video-exts` | `.mp4,.mov,.mkv,.webm,.avi,.m4v` | đuôi video cần quét |
+| `--srt-suffixes` | `.transcript.srt,.srt` | suffix SRT ưu tiên |
+| `--srt-dir` | rỗng | thư mục SRT riêng |
+| `--skip-existing` | off | bỏ qua output video đã có |
+| `--no-preserve-tree` | off | không giữ cấu trúc thư mục con |
+| `--no-burn` | off | chỉ tạo SRT dịch và ASS |
+
+Makefile:
+
+```bash
+make subtitle-batch BATCH_DIR=./Downloaded OUTPUT_DIR=./subtitle_outputs TRANSLATOR=argos
+```
+
 ## 7. Subtitle API
 
 Server mode dùng chung `/api/v1/jobs/{job_id}` để poll cả download job và subtitle job.
@@ -591,6 +645,7 @@ make subtitle-ass INPUT=input.vi.srt OUTPUT=input.vi.ass
 make subtitle-pick VIDEO=input.mp4 TIME=00:00:03 MASK_JSON=mask_rect.json
 make subtitle-burn VIDEO=input.mp4 ASS=input.vi.ass OUTPUT=output.vi.mp4 MASK_MODE=blur MASK_RECT=0,880,1080,180
 make subtitle-pipeline VIDEO=input.mp4 SRT=input.srt OUTPUT=output.vi.mp4 MASK_MODE=blur MASK_RECT=0,880,1080,180
+make subtitle-batch BATCH_DIR=./Downloaded OUTPUT_DIR=./subtitle_outputs TRANSLATOR=argos
 make funasr-transcribe FUNASR_ARGS='-d ./Downloaded --srt'
 make whisper-transcribe WHISPER_ARGS='-d ./Downloaded --srt'
 make sensevoice-transcribe SENSEVOICE_ARGS='-d ./Downloaded --srt --sense-voice ./model.int8.onnx --tokens ./tokens.txt --silero-vad-model ./silero_vad.onnx'
@@ -606,6 +661,7 @@ Các biến Makefile hay dùng:
 | `INPUT` | rỗng | file input cho SRT/ASS |
 | `OUTPUT` | rỗng | output file |
 | `VIDEO` | rỗng | input video |
+| `BATCH_DIR` | `./Downloaded` | thư mục batch subtitle |
 | `SRT` | rỗng | input SRT |
 | `ASS` | rỗng | input ASS |
 | `TRANSLATOR` | `noop` | backend dịch |

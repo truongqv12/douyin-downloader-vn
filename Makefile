@@ -12,6 +12,7 @@ OUTPUT ?=
 VIDEO ?=
 SRT ?=
 ASS ?=
+BATCH_DIR ?= ./Downloaded
 OUTPUT_DIR ?= ./subtitle_outputs
 TRANSLATOR ?= noop
 SOURCE_LANG ?= zh
@@ -31,7 +32,7 @@ WHISPER_ARGS ?= -d "$(TRANSCRIBE_DIR)" --srt
 
 .PHONY: help install-dev install-all test lint lint-new check clean serve \
 	subtitle-tests subtitle-lint subtitle-check subtitle-translate subtitle-ass \
-	subtitle-pick subtitle-burn subtitle-pipeline \
+	subtitle-pick subtitle-burn subtitle-pipeline subtitle-batch \
 	install-transcribe-whisper install-transcribe-funasr install-transcribe-sensevoice install-transcribe-opencc install-transcribe-all \
 	funasr-transcribe sensevoice-transcribe whisper-transcribe
 
@@ -64,6 +65,7 @@ help:
 	@echo "  make subtitle-pick VIDEO=in.mp4 TIME=00:00:03"
 	@echo "  make subtitle-burn VIDEO=in.mp4 ASS=out.vi.ass OUTPUT=out.mp4 MASK_MODE=blur MASK_RECT=0,880,1080,180"
 	@echo "  make subtitle-pipeline VIDEO=in.mp4 SRT=in.srt OUTPUT=out.mp4 MASK_MODE=blur MASK_RECT=0,880,1080,180"
+	@echo "  make subtitle-batch BATCH_DIR=./Downloaded OUTPUT_DIR=./subtitle_outputs TRANSLATOR=argos"
 
 install-dev:
 	$(PIP) install -e ".[dev,server]"
@@ -126,6 +128,9 @@ subtitle-burn:
 
 subtitle-pipeline:
 	$(DOUYIN) subtitle-pipeline --video "$(VIDEO)" --srt "$(SRT)" --output "$(OUTPUT)" --output-dir "$(OUTPUT_DIR)" --source-lang "$(SOURCE_LANG)" --target-lang "$(TARGET_LANG)" --translator "$(TRANSLATOR)" --batch-size "$(BATCH_SIZE)" --style-preset "$(STYLE)" --mask-mode "$(MASK_MODE)" --mask-rect "$(MASK_RECT)" --ffmpeg-path "$(FFMPEG)" --fonts-dir "$(FONTS_DIR)"
+
+subtitle-batch:
+	$(DOUYIN) subtitle-batch --dir "$(BATCH_DIR)" --output-dir "$(OUTPUT_DIR)" --source-lang "$(SOURCE_LANG)" --target-lang "$(TARGET_LANG)" --translator "$(TRANSLATOR)" --batch-size "$(BATCH_SIZE)" --style-preset "$(STYLE)" --mask-mode "$(MASK_MODE)" --mask-rect "$(MASK_RECT)" --ffmpeg-path "$(FFMPEG)" --fonts-dir "$(FONTS_DIR)" --skip-existing
 
 funasr-transcribe:
 	$(PYTHON) cli/funasr_transcribe.py $(FUNASR_ARGS)

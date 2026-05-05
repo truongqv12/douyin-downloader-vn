@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from subtitle.ass_converter import convert_srt_to_ass
+from subtitle.batch import parse_csv_values, run_subtitle_batch
 from subtitle.burner import burn_ass
 from subtitle.mask import build_masked_subtitle_filter
 from subtitle.models import MaskRect
@@ -104,6 +105,29 @@ def add_subtitle_subcommands(parser: argparse.ArgumentParser) -> None:
     pipeline.add_argument("--fonts-dir", default="", help="Thư mục font cho libass")
     pipeline.add_argument("--no-burn", action="store_true", help="Chỉ dịch và tạo ASS")
 
+    batch = subparsers.add_parser(
+        "subtitle-batch",
+        help="Quét thư mục, tự ghép video với SRT và chạy subtitle pipeline hàng loạt",
+    )
+    batch.add_argument("--dir", default="./Downloaded", help="Thư mục video/SRT")
+    batch.add_argument("--file", default="", help="Chỉ xử lý một video cụ thể")
+    batch.add_argument("--output-dir", default="./subtitle_outputs", help="Thư mục output batch")
+    batch.add_argument("--video-exts", default=".mp4,.mov,.mkv,.webm,.avi,.m4v", help="Đuôi video/audio, phân tách bằng dấu phẩy")
+    batch.add_argument("--srt-suffixes", default=".transcript.srt,.srt", help="Suffix SRT ưu tiên, phân tách bằng dấu phẩy")
+    batch.add_argument("--srt-dir", default="", help="Thư mục SRT riêng nếu không nằm cạnh video")
+    batch.add_argument("--source-lang", default="zh", help="Ngôn ngữ nguồn")
+    batch.add_argument("--target-lang", default="vi", help="Ngôn ngữ đích")
+    batch.add_argument("--translator", default="noop", help="Backend dịch")
+    batch.add_argument("--batch-size", type=int, default=20, help="Số cue mỗi batch")
+    batch.add_argument("--style-preset", default="douyin_vi", help="Style preset")
+    batch.add_argument("--mask-mode", default="none", choices=["none", "box", "blur", "crop"])
+    batch.add_argument("--mask-rect", default="", help="Vùng che dạng x,y,w,h")
+    batch.add_argument("--ffmpeg-path", default="", help="Đường dẫn ffmpeg")
+    batch.add_argument("--fonts-dir", default="", help="Thư mục font cho libass")
+    batch.add_argument("--skip-existing", action="store_true", help="Bỏ qua video đã có output")
+    batch.add_argument("--no-preserve-tree", action="store_true", help="Không giữ cấu trúc thư mục con trong output")
+    batch.add_argument("--no-burn", action="store_true", help="Chỉ dịch và tạo ASS")
+
 
 async def run_subtitle_subcommand(args: Any, _config: Any, display: Any) -> bool:
     command = getattr(args, "subtitle_command", None)
@@ -121,6 +145,9 @@ async def run_subtitle_subcommand(args: Any, _config: Any, display: Any) -> bool
         return True
     if command == "subtitle-pipeline":
         _run_subtitle_pipeline(args, _config, display)
+        return True
+    if command == "subtitle-batch":
+        _run_subtitle_batch(args, _config, display)
         return True
     return False
 
@@ -232,3 +259,43 @@ def _run_subtitle_pipeline(args: Any, config: Any, display: Any) -> None:
         display.print_success(f"Subtitle pipeline hoàn tất: {result.outputs}")
     else:
         display.print_error(result.error or "Subtitle pipeline failed")
+
+
+def _run_subtitle_batch(args: Any, config: Any, display: Any) -> None:
+    rect = MaskRect.parse(args.mask_rect) if args.mask_rect else None
+
+    def _progress(stage: str, current: int, total: int, message: str) -> None:
+        display.print_info(f"[{current}/{total}] {stage}: {message}")
+
+    summary = run_subtitle_batch(
+        directory=Path(args.dir),
+        file_path=Path(args.file) if args.file else None,
+        output_dir=Path(args.output_dir),
+        source_lang=args.source_lang,
+        target_lang=args.target_lang,
+        translator_name=args.translator,
+        batch_size=args.batch_size,
+        style_preset=args.style_preset,
+        subtitle_config=config.get("subtitle", {}) if hasattr(config, "get") else {},
+        mask_mode=args.mask_mode,
+        mask_rect=rect,
+        ffmpeg_path=args.ffmpeg_path,
+        fonts_dir=args.fonts_dir,
+        burn=not args.no_burn,
+        video_extensions=parse_csv_values(args.video_exts, [".mp4", ".mov", ".mkv", ".webm", ".avi", ".m4v"]),
+        srt_suffixes=parse_csv_values(args.srt_suffixes, [".transcript.srt", ".srt"]),
+        srt_dir=Path(args.srt_dir) if args.srt_dir else None,
+        skip_existing=args.skip_existing,
+        preserve_tree=not args.no_preserve_tree,
+        progress_callback=_progress,
+    )
+    if summary.failed:
+        display.print_warning(
+            f"Subtitle batch hoàn tất: total={summary.total}, success={summary.success}, "
+            f"failed={summary.failed}, skipped={summary.skipped}"
+        )
+    else:
+        display.print_success(
+            f"Subtitle batch hoàn tất: total={summary.total}, success={summary.success}, "
+            f"skipped={summary.skipped}"
+        )
