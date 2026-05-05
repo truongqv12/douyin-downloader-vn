@@ -20,6 +20,8 @@ class SubtitleBatchItem:
     srt_path: Optional[Path] = None
     output_dir: Optional[Path] = None
     output_video_path: Optional[Path] = None
+    output_srt_path: Optional[Path] = None
+    output_ass_path: Optional[Path] = None
     skip_reason: str = ""
 
 
@@ -137,6 +139,7 @@ def build_batch_items(
     srt_dir: Optional[Path] = None,
     skip_existing: bool = False,
     preserve_tree: bool = True,
+    burn: bool = True,
 ) -> List[SubtitleBatchItem]:
     items: List[SubtitleBatchItem] = []
     for video_path in discover_video_paths(
@@ -151,17 +154,6 @@ def build_batch_items(
             target_lang=target_lang,
             preserve_tree=preserve_tree,
         )
-        # Skip-existing checks the final video because intermediate SRT/ASS can be reused.
-        if skip_existing and output_video_path.exists():
-            items.append(
-                SubtitleBatchItem(
-                    video_path=video_path,
-                    output_dir=item_output_dir,
-                    output_video_path=output_video_path,
-                    skip_reason="output video already exists",
-                )
-            )
-            continue
         srt_path = find_matching_srt(video_path, srt_suffixes=srt_suffixes, srt_dir=srt_dir)
         if srt_path is None:
             items.append(
@@ -173,15 +165,41 @@ def build_batch_items(
                 )
             )
             continue
+        output_srt_path, output_ass_path = output_subtitle_paths_for_item(
+            srt_path=srt_path,
+            output_dir=item_output_dir,
+            target_lang=target_lang,
+        )
+        skip_reason = ""
+        if skip_existing:
+            if burn and output_video_path.exists():
+                skip_reason = "output video already exists"
+            elif not burn and output_srt_path.exists() and output_ass_path.exists():
+                skip_reason = "translated srt and ass already exist"
         items.append(
             SubtitleBatchItem(
                 video_path=video_path,
                 srt_path=srt_path,
                 output_dir=item_output_dir,
                 output_video_path=output_video_path,
+                output_srt_path=output_srt_path,
+                output_ass_path=output_ass_path,
+                skip_reason=skip_reason,
             )
         )
     return items
+
+
+def output_subtitle_paths_for_item(
+    *,
+    srt_path: Path,
+    output_dir: Path,
+    target_lang: str,
+) -> Tuple[Path, Path]:
+    return (
+        output_dir / f"{srt_path.stem}.{target_lang}.srt",
+        output_dir / f"{srt_path.stem}.{target_lang}.ass",
+    )
 
 
 def run_subtitle_batch(
@@ -217,6 +235,7 @@ def run_subtitle_batch(
         srt_dir=srt_dir,
         skip_existing=skip_existing,
         preserve_tree=preserve_tree,
+        burn=burn,
     )
     summary = SubtitleBatchSummary()
     total = len(items)
@@ -226,6 +245,7 @@ def run_subtitle_batch(
             summary.add_result(
                 SubtitleBatchItemResult(
                     video_path=str(item.video_path),
+                    srt_path=str(item.srt_path or ""),
                     status="skipped",
                     error=item.skip_reason,
                 )

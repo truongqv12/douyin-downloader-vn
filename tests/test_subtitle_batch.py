@@ -5,6 +5,7 @@ from subtitle.batch import (
     discover_video_paths,
     find_matching_srt,
     output_paths_for_item,
+    output_subtitle_paths_for_item,
     parse_csv_values,
     run_subtitle_batch,
 )
@@ -62,6 +63,39 @@ def test_build_batch_items_skips_missing_srt_and_existing_output(tmp_path):
     assert by_name["first.mp4"].srt_path == tmp_path / "first.transcript.srt"
     assert by_name["second.mp4"].skip_reason == "matching srt not found"
     assert by_name["third.mp4"].skip_reason == "output video already exists"
+
+
+def test_build_batch_items_skip_existing_no_burn_checks_srt_and_ass(tmp_path):
+    output_dir = tmp_path / "out"
+    video = tmp_path / "clip.mp4"
+    srt = tmp_path / "clip.transcript.srt"
+    video.write_bytes(b"video")
+    srt.write_text("1\n00:00:01,000 --> 00:00:02,000\n你好\n", encoding="utf-8")
+    item_output_dir, _output_video_path = output_paths_for_item(
+        video_path=video,
+        base_dir=tmp_path,
+        output_dir=output_dir,
+        target_lang="vi",
+    )
+    output_srt, output_ass = output_subtitle_paths_for_item(
+        srt_path=srt,
+        output_dir=item_output_dir,
+        target_lang="vi",
+    )
+    output_srt.parent.mkdir(parents=True)
+    output_srt.write_text("done", encoding="utf-8")
+    output_ass.write_text("done", encoding="utf-8")
+
+    items = build_batch_items(
+        directory=tmp_path,
+        output_dir=output_dir,
+        target_lang="vi",
+        skip_existing=True,
+        burn=False,
+    )
+
+    assert len(items) == 1
+    assert items[0].skip_reason == "translated srt and ass already exist"
 
 
 def test_output_paths_can_preserve_nested_tree(tmp_path):
